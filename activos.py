@@ -1,5 +1,3 @@
-# activos.py
-
 import tkinter as tk
 from tkinter import messagebox
 from pymongo import MongoClient
@@ -11,12 +9,10 @@ class VentanaActivos:
         self.master.title("Gestión de Activos")
         self.master.geometry("500x450")
 
-        # Conexión a MongoDB
         self.client = MongoClient("mongodb://localhost:27017/")
         self.db = self.client["gestion_activos"]
         self.collection = self.db["activos"]
 
-        # Crear campos
         self.etiquetas = ["Código", "Nombre", "Descripción", "Categoría", "Estado"]
         self.entradas = {}
 
@@ -25,24 +21,20 @@ class VentanaActivos:
             self.entradas[etiqueta] = tk.Entry(self.master, width=40)
             self.entradas[etiqueta].grid(row=i, column=1, padx=10, pady=5)
 
-        # Botones
         tk.Button(self.master, text="Agregar nuevo activo", command=self.agregar_activo, bg="green", fg="white").grid(row=6, column=0, padx=10, pady=10)
         tk.Button(self.master, text="Buscar/Editar activo", command=self.buscar_activo, bg="orange", fg="black").grid(row=6, column=1, padx=10, pady=10)
 
     def agregar_activo(self):
         datos = {et: self.entradas[et].get().strip() for et in self.etiquetas}
 
-        # Validar campos vacíos
         if not all(datos.values()):
             messagebox.showerror("Error", "Todos los campos son requeridos.")
             return
 
-        # Validar código único
         if self.collection.find_one({"codigo": datos["Código"]}):
             messagebox.showerror("Error", "Ya existe un activo con ese código.")
             return
 
-        # Crear documento
         nuevo = {
             "codigo": datos["Código"],
             "nombre": datos["Nombre"],
@@ -70,7 +62,6 @@ class VentanaActivos:
             messagebox.showerror("No encontrado", "No se encontró un activo con ese código.")
             return
 
-        # Llenar campos con la información
         self.entradas["Nombre"].delete(0, tk.END)
         self.entradas["Nombre"].insert(0, activo["nombre"])
         self.entradas["Descripción"].delete(0, tk.END)
@@ -80,7 +71,6 @@ class VentanaActivos:
         self.entradas["Estado"].delete(0, tk.END)
         self.entradas["Estado"].insert(0, activo["estado_actual"])
 
-        # Agregar botón de guardar cambios
         tk.Button(self.master, text="Guardar cambios", command=lambda: self.actualizar_activo(activo["_id"]), bg="blue", fg="white").grid(row=7, column=0, columnspan=2, pady=10)
 
     def actualizar_activo(self, _id):
