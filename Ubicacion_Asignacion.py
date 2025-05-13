@@ -19,6 +19,7 @@ class Ubicacion_Asignacion:
         self.etiqueta_titulo.grid(row = 0, column = 0, padx = 10, pady = 10)
         
         #Aquí va su código
+        #Pequeña prueba del funcionamiento
         
         self.boton_regresar = tk.Button(frame, text = "Regresar", font = self.fuente_general, bg = "red", fg = "white", width = 30, command = self.regresar)
         self.boton_regresar.grid(row = 5, column = 0, padx = 10, pady = 10)
