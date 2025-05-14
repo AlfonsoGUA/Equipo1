@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import ttk, messagebox
 from pymongo import MongoClient
 from datetime import datetime
 
@@ -7,26 +7,66 @@ class VentanaActivos:
     def __init__(self, master):
         self.master = tk.Toplevel(master)
         self.master.title("Gestión de Activos")
-        self.master.geometry("500x450")
+        self.master.geometry("800x600")
 
         self.client = MongoClient("mongodb://localhost:27017/")
         self.db = self.client["gestion_activos"]
         self.collection = self.db["activos"]
 
+        form_frame = tk.Frame(self.master)
+        form_frame.pack(pady=10)
+
         self.etiquetas = ["Código", "Nombre", "Descripción", "Categoría", "Estado"]
         self.entradas = {}
 
-        for i, etiqueta in enumerate(self.etiquetas):
-            tk.Label(self.master, text=etiqueta).grid(row=i, column=0, padx=10, pady=5, sticky="e")
-            self.entradas[etiqueta] = tk.Entry(self.master, width=40)
-            self.entradas[etiqueta].grid(row=i, column=1, padx=10, pady=5)
+        categorias = ["Electrónica", "Computación", "Deportes", "Mobiliario", "Otro"]
+        estados = ["Operativo", "Mantenimiento", "Inactivo"]
 
-        tk.Button(self.master, text="Agregar nuevo activo", command=self.agregar_activo, bg="green", fg="white").grid(row=6, column=0, padx=10, pady=10)
-        tk.Button(self.master, text="Buscar/Editar activo", command=self.buscar_activo, bg="orange", fg="black").grid(row=6, column=1, padx=10, pady=10)
+        for i, etiqueta in enumerate(self.etiquetas):
+            tk.Label(form_frame, text=etiqueta).grid(row=0, column=i, padx=5)
+            if etiqueta == "Categoría":
+                combo = ttk.Combobox(form_frame, values=categorias, state="readonly", width=15)
+                combo.grid(row=1, column=i, padx=5)
+                self.entradas[etiqueta] = combo
+            elif etiqueta == "Estado":
+                combo = ttk.Combobox(form_frame, values=estados, state="readonly", width=15)
+                combo.grid(row=1, column=i, padx=5)
+                self.entradas[etiqueta] = combo
+            else:
+                entry = tk.Entry(form_frame, width=15)
+                entry.grid(row=1, column=i, padx=5)
+                self.entradas[etiqueta] = entry
+
+        btn_frame = tk.Frame(self.master)
+        btn_frame.pack(pady=10)
+
+        tk.Button(btn_frame, text="Agregar Activo", command=self.agregar_activo, bg="green", fg="white").pack(side="left", padx=5)
+        tk.Button(btn_frame, text="Guardar Cambios", command=self.guardar_cambios, bg="blue", fg="white").pack(side="left", padx=5)
+
+        self.tree = ttk.Treeview(self.master, columns=self.etiquetas, show="headings", height=10)
+        for et in self.etiquetas:
+            self.tree.heading(et, text=et)
+            self.tree.column(et, width=140)
+
+        self.tree.pack(pady=10, fill="both", expand=True)
+        self.tree.bind("<Double-1>", self.cargar_activo_seleccionado)
+
+        self.activo_seleccionado = None
+        self.cargar_activos()
+
+    def cargar_activos(self):
+        self.tree.delete(*self.tree.get_children())
+        for doc in self.collection.find():
+            self.tree.insert("", "end", values=(
+                doc["codigo"],
+                doc["nombre"],
+                doc["descripcion"],
+                doc["categoria"],
+                doc["estado_actual"]
+            ))
 
     def agregar_activo(self):
         datos = {et: self.entradas[et].get().strip() for et in self.etiquetas}
-
         if not all(datos.values()):
             messagebox.showerror("Error", "Todos los campos son requeridos.")
             return
@@ -50,37 +90,36 @@ class VentanaActivos:
         self.collection.insert_one(nuevo)
         messagebox.showinfo("Éxito", "Activo registrado exitosamente.")
         self.limpiar_campos()
+        self.cargar_activos()
 
-    def buscar_activo(self):
-        codigo = self.entradas["Código"].get().strip()
-        if not codigo:
-            messagebox.showwarning("Atención", "Ingresa un código para buscar.")
+    def cargar_activo_seleccionado(self, event):
+        seleccion = self.tree.selection()
+        if seleccion:
+            valores = self.tree.item(seleccion[0], "values")
+            activo = self.collection.find_one({"codigo": valores[0]})
+            if activo:
+                self.activo_seleccionado = activo["_id"]
+                self.entradas["Código"].delete(0, tk.END)
+                self.entradas["Código"].insert(0, activo["codigo"])
+                self.entradas["Nombre"].delete(0, tk.END)
+                self.entradas["Nombre"].insert(0, activo["nombre"])
+                self.entradas["Descripción"].delete(0, tk.END)
+                self.entradas["Descripción"].insert(0, activo["descripcion"])
+                self.entradas["Categoría"].set(activo["categoria"])
+                self.entradas["Estado"].set(activo["estado_actual"])
+
+    def guardar_cambios(self):
+        if not self.activo_seleccionado:
+            messagebox.showwarning("Aviso", "Selecciona un activo para editar.")
             return
 
-        activo = self.collection.find_one({"codigo": codigo})
-        if not activo:
-            messagebox.showerror("No encontrado", "No se encontró un activo con ese código.")
-            return
-
-        self.entradas["Nombre"].delete(0, tk.END)
-        self.entradas["Nombre"].insert(0, activo["nombre"])
-        self.entradas["Descripción"].delete(0, tk.END)
-        self.entradas["Descripción"].insert(0, activo["descripcion"])
-        self.entradas["Categoría"].delete(0, tk.END)
-        self.entradas["Categoría"].insert(0, activo["categoria"])
-        self.entradas["Estado"].delete(0, tk.END)
-        self.entradas["Estado"].insert(0, activo["estado_actual"])
-
-        tk.Button(self.master, text="Guardar cambios", command=lambda: self.actualizar_activo(activo["_id"]), bg="blue", fg="white").grid(row=7, column=0, columnspan=2, pady=10)
-
-    def actualizar_activo(self, _id):
         datos = {et: self.entradas[et].get().strip() for et in self.etiquetas}
         if not all(datos.values()):
             messagebox.showerror("Error", "Todos los campos son requeridos.")
             return
 
         self.collection.update_one(
-            {"_id": _id},
+            {"_id": self.activo_seleccionado},
             {"$set": {
                 "nombre": datos["Nombre"],
                 "descripcion": datos["Descripción"],
@@ -88,8 +127,15 @@ class VentanaActivos:
                 "estado_actual": datos["Estado"]
             }}
         )
-        messagebox.showinfo("Actualizado", "Los datos del activo se actualizaron correctamente.")
+
+        messagebox.showinfo("Éxito", "Activo actualizado.")
+        self.activo_seleccionado = None
+        self.limpiar_campos()
+        self.cargar_activos()
 
     def limpiar_campos(self):
         for campo in self.entradas.values():
-            campo.delete(0, tk.END)
+            if isinstance(campo, ttk.Combobox):
+                campo.set("")
+            else:
+                campo.delete(0, tk.END)
