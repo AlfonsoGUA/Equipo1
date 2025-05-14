@@ -5,7 +5,7 @@ from datetime import datetime
 
 class VentanaActivos:
     def __init__(self, master):
-        self.master = tk.Toplevel(master)
+        self.master = tk.Toplevel(master)  
         self.master.title("Gestión de Activos")
         self.master.geometry("800x600")
 
@@ -54,6 +54,14 @@ class VentanaActivos:
 
         self.activo_seleccionado = None
         self.cargar_activos()
+
+        regresar_frame = tk.Frame(self.master)
+        regresar_frame.pack(pady=10)
+        tk.Button(regresar_frame, text="Regresar al Menú", command=self.regresar_menu, bg="gray", fg="white").pack()
+
+    def regresar_menu(self):
+        self.master.destroy()  
+        self.master.master.deiconify()  
 
     def cargar_activos(self):
         self.tree.delete(*self.tree.get_children())
