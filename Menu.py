@@ -4,6 +4,8 @@ from Adicion_Edicion import Adicion_Edicion
 from Ubicacion_Asignacion import Ubicacion_Asignacion
 from Mantenimiento_Estado import Mantenimiento_Estado
 from Consultas import Consultas
+from activos import VentanaActivos
+
 
 class Menu:
     def __init__(self, root, login_window):
@@ -39,8 +41,8 @@ class Menu:
         self.boton_regresar.grid(row = 5, column = 0, padx = 10, pady = 10)
 
     def abrir_adicion_edicion(self):
-        self.window.withdraw()
-        Adicion_Edicion(self.window)
+        self.window.withdraw()  
+        VentanaActivos(self.window)
     
     def abrir_ubicacion_asignacion(self):
         self.window.withdraw()
