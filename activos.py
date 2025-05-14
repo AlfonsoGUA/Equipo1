@@ -10,7 +10,7 @@ class VentanaActivos:
         self.master.geometry("800x600")
 
         self.client = MongoClient("mongodb://localhost:27017/")
-        self.db = self.client["gestion_activos"]
+        self.db = self.client["db_aplicacion"]
         self.collection = self.db["activos"]
 
         form_frame = tk.Frame(self.master)
@@ -42,6 +42,7 @@ class VentanaActivos:
 
         tk.Button(btn_frame, text="Agregar Activo", command=self.agregar_activo, bg="green", fg="white").pack(side="left", padx=5)
         tk.Button(btn_frame, text="Guardar Cambios", command=self.guardar_cambios, bg="blue", fg="white").pack(side="left", padx=5)
+        tk.Button(btn_frame, text="Eliminar Activo", command=self.eliminar_activo, bg="red", fg="white").pack(side="left", padx=5)
 
         self.tree = ttk.Treeview(self.master, columns=self.etiquetas, show="headings", height=10)
         for et in self.etiquetas:
@@ -58,11 +59,11 @@ class VentanaActivos:
         self.tree.delete(*self.tree.get_children())
         for doc in self.collection.find():
             self.tree.insert("", "end", values=(
-                doc["codigo"],
-                doc["nombre"],
-                doc["descripcion"],
-                doc["categoria"],
-                doc["estado_actual"]
+                doc.get("codigo", ""),
+                doc.get("nombre", ""),
+                doc.get("descripcion", ""),
+                doc.get("categoria", ""),
+                doc.get("estado_actual", "")
             ))
 
     def agregar_activo(self):
@@ -121,6 +122,7 @@ class VentanaActivos:
         self.collection.update_one(
             {"_id": self.activo_seleccionado},
             {"$set": {
+                "codigo": datos["Código"],
                 "nombre": datos["Nombre"],
                 "descripcion": datos["Descripción"],
                 "categoria": datos["Categoría"],
@@ -139,3 +141,23 @@ class VentanaActivos:
                 campo.set("")
             else:
                 campo.delete(0, tk.END)
+
+    def eliminar_activo(self):
+        seleccion = self.tree.selection()
+        if not seleccion:
+            messagebox.showwarning("Aviso", "Selecciona un activo para eliminar.")
+            return
+
+        valores = self.tree.item(seleccion[0], "values")
+        codigo = valores[0]
+
+        confirmar = messagebox.askyesno("Confirmar eliminación", f"¿Estás seguro de eliminar el activo con código '{codigo}'?")
+        if confirmar:
+            resultado = self.collection.delete_one({"codigo": codigo})
+            if resultado.deleted_count:
+                messagebox.showinfo("Eliminado", f"Activo '{codigo}' eliminado correctamente.")
+                self.activo_seleccionado = None
+                self.limpiar_campos()
+                self.cargar_activos()
+            else:
+                messagebox.showerror("Error", f"No se encontró el activo '{codigo}' para eliminar.")
