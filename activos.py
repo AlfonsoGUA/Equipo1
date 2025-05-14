@@ -5,7 +5,7 @@ from datetime import datetime
 
 class VentanaActivos:
     def __init__(self, master):
-        self.master = tk.Toplevel(master)  # Crear una nueva ventana Toplevel
+        self.master = tk.Toplevel(master)  
         self.master.title("Gestión de Activos")
         self.master.geometry("800x600")
 
@@ -60,8 +60,8 @@ class VentanaActivos:
         tk.Button(regresar_frame, text="Regresar al Menú", command=self.regresar_menu, bg="gray", fg="white").pack()
 
     def regresar_menu(self):
-        self.master.destroy()  # Cierra la ventana actual de activos
-        self.master.master.deiconify()  # Muestra la 
+        self.master.destroy()  
+        self.master.master.deiconify()  
 
     def cargar_activos(self):
         self.tree.delete(*self.tree.get_children())
