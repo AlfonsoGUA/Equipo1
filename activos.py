@@ -61,7 +61,11 @@ class VentanaActivos:
 
     def regresar_menu(self):
         self.master.destroy()  
+<<<<<<< HEAD
         self.master.master.deiconify()  
+=======
+        self.master.master.deiconify() 
+>>>>>>> Alfonso
 
     def cargar_activos(self):
         self.tree.delete(*self.tree.get_children())
