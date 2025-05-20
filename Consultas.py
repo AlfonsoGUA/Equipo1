@@ -65,7 +65,7 @@ class Consultas:
         self.resultado_actual = pd.DataFrame()
         self.window.protocol("WM_DELETE_WINDOW", self.regresar)
 
-        self.actualizar_filtros_orden()  # configurar columnas iniciales
+        self.actualizar_filtros_orden()
         self.opcion_var.trace_add("write", lambda *args: self.actualizar_filtros_orden())
 
     def actualizar_filtros_orden(self):
@@ -77,7 +77,7 @@ class Consultas:
         elif opcion == "Activos por persona":
             columnas = ["Nombre", "Activo", "Departamento", "Oficina", "Estado"]
         elif opcion == "Activos en mantenimiento":
-            columnas = ["codigo", "nombre", "asignado_a.nombre", "ubicacion_actual.departamento", "ubicacion_actual.oficina"]
+            columnas = ["Código", "Nombre", "Asignado a", "Departamento", "Oficina"]
         elif opcion == "Fecha del último mantenimiento":
             columnas = ["Código", "Nombre", "Último mantenimiento"]
 
@@ -108,25 +108,30 @@ class Consultas:
             } for d in datos])
 
         elif opcion == "Activos por persona":
-            cursor = self.collection.find({}, {
-                "_id": 0, "nombre": 1, "asignado_a.nombre": 1,
-                "ubicacion_actual.departamento": 1, "ubicacion_actual.oficina": 1,
-                "estado_actual": 1
-            })
-            df = pd.DataFrame([{
-                "Nombre": d.get("asignado_a", {}).get("nombre", ""),
-                "Activo": d.get("nombre", ""),
-                "Departamento": d.get("ubicacion_actual", {}).get("departamento", ""),
-                "Oficina": d.get("ubicacion_actual", {}).get("oficina", ""),
-                "Estado": d.get("estado_actual", "")
-            } for d in cursor])
+            cursor = self.collection.find()
+            registros = []
+            for d in cursor:
+                registros.append({
+                    "Nombre": d.get("asignado_a", {}).get("nombre", ""),
+                    "Activo": d.get("nombre", ""),
+                    "Departamento": d.get("ubicacion_actual", {}).get("departamento", ""),
+                    "Oficina": d.get("ubicacion_actual", {}).get("oficina", ""),
+                    "Estado": d.get("estado_actual", "")
+                })
+            df = pd.DataFrame(registros)
 
         elif opcion == "Activos en mantenimiento":
-            cursor = self.collection.find({"estado_actual": "mantenimiento"}, {
-                "_id": 0, "codigo": 1, "nombre": 1, "asignado_a.nombre": 1,
-                "ubicacion_actual.departamento": 1, "ubicacion_actual.oficina": 1
-            })
-            df = pd.DataFrame(cursor)
+            cursor = self.collection.find({"estado_actual": "mantenimiento"})
+            registros = []
+            for d in cursor:
+                registros.append({
+                    "Código": d.get("codigo", ""),
+                    "Nombre": d.get("nombre", ""),
+                    "Asignado a": d.get("asignado_a", {}).get("nombre", ""),
+                    "Departamento": d.get("ubicacion_actual", {}).get("departamento", ""),
+                    "Oficina": d.get("ubicacion_actual", {}).get("oficina", "")
+                })
+            df = pd.DataFrame(registros)
 
         elif opcion == "Fecha del último mantenimiento":
             registros = []
@@ -140,7 +145,7 @@ class Consultas:
                 })
             df = pd.DataFrame(registros)
 
-        # Ordenar resultados si hay filtro
+        # Ordenar si corresponde
         if not df.empty:
             col = self.orden_var.get()
             if col in df.columns:
@@ -162,7 +167,7 @@ class Consultas:
 
     def descargar_csv(self):
         if self.resultado_actual.empty:
-            messagebox.showwarning("ADVERTENCIA", "No hay datos para guardar.")
+            messagebox.showwarning("Advertencia", "No hay datos para guardar.")
             return
 
         ruta = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV files", "*.csv")])
