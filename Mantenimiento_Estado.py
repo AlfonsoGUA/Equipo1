@@ -198,4 +198,6 @@ class Mantenimiento_Estado:
 
     def regresar_menu(self):
         self.master.destroy()
+        if self.master.master:
+            self.master.master.deiconify()
         self.master.master.deiconify()
