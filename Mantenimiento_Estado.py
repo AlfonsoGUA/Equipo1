@@ -40,8 +40,7 @@ class Mantenimiento_Estado:
         self.master.title("Historial de Mantenimiento")
         self.master.geometry("900x750")
 
-        # Fuentes personalizadas
-        self.fuente_titulo = font.Font(family="Decotura ICG inline", size=24)
+        self.fuente_titulo = font.Font(family="Decotura ICG inline", size=28)
         self.fuente_general = font.Font(family="Decotura ICG", size=14)
 
         # Conexión a MongoDB
@@ -199,5 +198,4 @@ class Mantenimiento_Estado:
 
     def regresar_menu(self):
         self.master.destroy()
-        if self.master.master:
-            self.master.master.deiconify()
+        self.master.master.deiconify()
