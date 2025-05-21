@@ -56,7 +56,6 @@ class Mantenimiento_Estado:
 
         self.codigo_seleccionado = None
 
-        # Frame superior con búsqueda
         top_frame = tk.Frame(self.master)
         top_frame.pack(pady=5, padx=10, fill="x")
 
@@ -66,7 +65,6 @@ class Mantenimiento_Estado:
         tk.Button(top_frame, text="Buscar", command=self.buscar_activos, font=self.fuente_general).pack(side="left")
         tk.Button(top_frame, text="Regresar al Menú", command=self.regresar_menu, bg="gray", fg="white", font=self.fuente_general).pack(side="right")
 
-        # Tabla Treeview
         self.tree = ttk.Treeview(self.master, columns=("Código", "Nombre", "Categoría", "Estado"), show="headings", height=8)
         for col in ("Código", "Nombre", "Categoría", "Estado"):
             self.tree.heading(col, text=col)
@@ -88,7 +86,6 @@ class Mantenimiento_Estado:
 
         tk.Button(self.master, text="Registrar Mantenimiento", command=self.guardar_mantenimiento, bg="green", fg="white", font=self.fuente_general).pack(pady=5)
 
-        # Combobox estado
         estado_frame = tk.Frame(self.master)
         estado_frame.pack(pady=5)
         tk.Label(estado_frame, text="Modificar Estado del Activo:", font=self.fuente_general).pack(side="left")
