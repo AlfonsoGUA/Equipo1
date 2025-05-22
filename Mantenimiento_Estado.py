@@ -59,7 +59,7 @@ class Mantenimiento_Estado:
         top_frame = tk.Frame(self.master)
         top_frame.pack(pady=5, padx=10, fill="x")
 
-        tk.Label(top_frame, text="Buscar activo por nombre o código:", font=self.fuente_general).pack(side="left")
+        tk.Label(top_frame, text="Buscar activo:", font=self.fuente_general).pack(side="left")
         self.buscador = tk.Entry(top_frame, font=self.fuente_general)
         self.buscador.pack(side="left", padx=5)
         tk.Button(top_frame, text="Buscar", command=self.buscar_activos, font=self.fuente_general).pack(side="left")
